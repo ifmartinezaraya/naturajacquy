@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Inventario Natura Jacquy</title>
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Inventario%20Natura%20Jacquy%22%2C%22short_name%22%3A%22Inventario%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F6F4EE%22%2C%22theme_color%22%3A%22%232B3D2E%22%7D">
+</head>
+<body>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+#nj-app, #nj-app *{ box-sizing:border-box; }
+#nj-app{
+  --bg:#F6F4EE; --surface:#FFFFFF; --ink:#262519; --ink-soft:#767462;
+  --forest:#2B3D2E; --forest-deep:#1B2A1D; --rose:#C98B87; --rose-deep:#A9645F;
+  --gold:#B08B4F; --line:#E7E2D6;
+  --danger:#B3463E; --danger-bg:#FBEAE8;
+  --warn:#B4802A; --warn-bg:#FBF1DF;
+  --ok:#4C7A52; --ok-bg:#EAF2E9;
+  --radius:16px; --shadow:0 6px 20px rgba(38,37,25,0.07);
+  font-family:'Manrope',system-ui,sans-serif; color:var(--ink); background:var(--bg);
+  min-height:100vh; padding:0 0 90px 0; position:relative; font-size:15px; line-height:1.45;
+}
+#nj-app h1,#nj-app h2,#nj-app h3{ font-family:'Fraunces',serif; margin:0; }
+#nj-app button{ font-family:inherit; cursor:pointer; }
+#nj-app input,#nj-app select,#nj-app textarea{ font-family:inherit; font-size:15px; }
+#nj-app *:focus-visible{ outline:2px solid var(--forest); outline-offset:2px; }
+
+.nj-header{ background:linear-gradient(135deg,var(--forest-deep),var(--forest)); color:#F3EFE3; padding:26px 20px 34px; position:relative; overflow:hidden; }
+.nj-header::after{ content:""; position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle,rgba(201,139,135,0.35),transparent 70%); }
+.nj-eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#C9BFA0; margin-bottom:4px; }
+.nj-title{ font-size:26px; font-weight:600; }
+.nj-sub{ color:#D9D4C2; font-size:13px; margin-top:4px; }
+.nj-user{ color:#C9BFA0; font-size:12px; margin-top:8px; font-weight:600; }
+.nj-logout{ position:absolute; top:18px; right:18px; z-index:3; background:rgba(255,255,255,0.12); color:#F3EFE3; border:1px solid rgba(255,255,255,0.25); border-radius:999px; padding:7px 13px; font-size:12px; font-weight:700; }
+.nj-logout:hover{ background:rgba(255,255,255,0.2); }
+.nj-login{ max-width:420px; margin:0 auto; padding:24px 20px; }
+
+.nj-stats{ display:flex; gap:10px; padding:0 16px; margin-top:-22px; overflow-x:auto; position:relative; z-index:2; }
+.nj-stat{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:12px 14px; min-width:118px; flex:1; }
+.nj-stat b{ display:block; font-family:'Fraunces',serif; font-size:20px; }
+.nj-stat span{ font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
+.nj-stat.warn b{ color:var(--warn); } .nj-stat.danger b{ color:var(--danger); }
+
+.nj-toolbar{ display:flex; gap:8px; padding:18px 16px 6px; flex-wrap:wrap; }
+.nj-search{ flex:1; min-width:160px; position:relative; }
+.nj-search input{ width:100%; padding:11px 14px 11px 36px; border-radius:12px; border:1px solid var(--line); background:var(--surface); }
+.nj-search::before{ content:"\1F50D"; position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.6; }
+.nj-select{ padding:11px 12px; border-radius:12px; border:1px solid var(--line); background:var(--surface); max-width:150px; }
+
+.nj-tabs{ display:flex; gap:6px; padding:12px 16px 0; }
+.nj-tab{ background:none; border:none; padding:8px 14px; border-radius:999px; font-weight:700; font-size:13px; color:var(--ink-soft); }
+.nj-tab.active{ background:var(--forest); color:#fff; }
+
+.nj-section-title{ padding:16px 16px 6px; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); font-weight:700; }
+
+.nj-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; padding:8px 16px 16px; }
+
+.nj-card{ background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px; display:flex; gap:12px; }
+.nj-dial{ width:52px; height:52px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; position:relative; }
+.nj-dial::before{ content:""; position:absolute; inset:5px; border-radius:50%; background:var(--surface); }
+.nj-dial b{ position:relative; z-index:1; font-family:'Fraunces',serif; font-size:13px; }
+.nj-card-body{ flex:1; min-width:0; }
+.nj-card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:6px; }
+.nj-card-name{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; overflow-wrap:anywhere; }
+.nj-cat{ font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-top:1px; }
+.nj-badge{ font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; white-space:nowrap; text-transform:uppercase; letter-spacing:.03em; }
+.nj-badge.ok{ background:var(--ok-bg); color:var(--ok); }
+.nj-badge.warn{ background:var(--warn-bg); color:var(--warn); }
+.nj-badge.danger{ background:var(--danger-bg); color:var(--danger); }
+.nj-card-meta{ display:flex; justify-content:space-between; align-items:baseline; margin-top:8px; }
+.nj-qty{ font-family:'Fraunces',serif; font-size:22px; }
+.nj-qty small{ font-family:'Manrope',sans-serif; font-size:11px; color:var(--ink-soft); font-weight:600; }
+.nj-price{ font-weight:700; color:var(--forest); font-size:14px; }
+.nj-card-actions{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.nj-btn{ border:1px solid var(--line); background:var(--surface); border-radius:9px; padding:7px 10px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:4px; }
+.nj-btn.in{ color:var(--ok); border-color:#cfe2cf; } .nj-btn.out{ color:var(--danger); border-color:#eccac7; }
+.nj-btn.ghost{ color:var(--ink-soft); }
+.nj-btn:hover{ filter:brightness(0.97); }
+
+.nj-empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+.nj-empty h3{ color:var(--ink); margin-bottom:6px; }
+
+.nj-mov-list{ padding:6px 16px 16px; display:flex; flex-direction:column; gap:8px; }
+.nj-mov{ background:var(--surface); border-radius:12px; box-shadow:var(--shadow); padding:11px 14px; display:flex; align-items:center; gap:10px; }
+.nj-mov-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex:none; }
+.nj-mov-icon.in{ background:var(--ok-bg); } .nj-mov-icon.out{ background:var(--danger-bg); }
+.nj-mov-body{ flex:1; min-width:0; }
+.nj-mov-name{ font-weight:700; font-size:13.5px; overflow-wrap:anywhere; }
+.nj-mov-note{ font-size:12px; color:var(--ink-soft); }
+.nj-mov-right{ text-align:right; }
+.nj-mov-qty{ font-weight:800; font-family:'Fraunces',serif; }
+.nj-mov-qty.in{ color:var(--ok); } .nj-mov-qty.out{ color:var(--danger); }
+.nj-mov-time{ font-size:10.5px; color:var(--ink-soft); }
+
+.nj-fab{ position:fixed; right:18px; bottom:22px; width:56px; height:56px; border-radius:50%; background:var(--rose-deep); color:#fff; border:none; box-shadow:0 8px 20px rgba(169,100,95,0.45); font-size:26px; z-index:40; }
+.nj-backup{ position:fixed; left:18px; bottom:22px; background:var(--surface); border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 14px; font-size:12px; font-weight:700; box-shadow:var(--shadow); z-index:40; display:flex; gap:6px; align-items:center; }
+
+.nj-overlay{ position:fixed; inset:0; background:rgba(27,26,17,0.5); display:flex; align-items:flex-end; justify-content:center; z-index:100; }
+@media(min-width:640px){ .nj-overlay{ align-items:center; } }
+.nj-modal{ background:var(--surface); width:100%; max-width:440px; border-radius:20px 20px 0 0; padding:20px; max-height:88vh; overflow-y:auto; }
+@media(min-width:640px){ .nj-modal{ border-radius:20px; } }
+.nj-modal h2{ font-size:19px; margin-bottom:14px; }
+.nj-field{ margin-bottom:12px; }
+.nj-field label{ display:block; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em; }
+.nj-field input,.nj-field select,.nj-field textarea{ width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:#FCFBF8; }
+.nj-row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.nj-modal-actions{ display:flex; gap:8px; margin-top:16px; }
+.nj-modal-actions .nj-primary{ flex:1; background:var(--forest); color:#fff; border:none; border-radius:11px; padding:13px; font-weight:800; font-size:14.5px; }
+.nj-modal-actions .nj-cancel{ background:none; border:1px solid var(--line); border-radius:11px; padding:13px 16px; font-weight:700; color:var(--ink-soft); }
+.nj-modal-actions .nj-danger{ flex:1; background:var(--danger); color:#fff; border:none; border-radius:11px; padding:13px; font-weight:800; }
+.nj-toggle2{ display:flex; border:1px solid var(--line); border-radius:11px; overflow:hidden; }
+.nj-toggle2 button{ flex:1; border:none; background:var(--surface); padding:11px; font-weight:800; font-size:13px; }
+.nj-toggle2 button.active-in{ background:var(--ok); color:#fff; }
+.nj-toggle2 button.active-out{ background:var(--danger); color:#fff; }
+.nj-hint{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+.nj-toast-wrap{ position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; padding:0 16px; }
+.nj-toast{ background:var(--forest-deep); color:#F3EFE3; padding:10px 16px; border-radius:999px; font-size:13px; font-weight:600; box-shadow:0 6px 16px rgba(0,0,0,0.2); max-width:360px; text-align:center; }
+.nj-toast.err{ background:var(--danger); }
+.nj-loading{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; color:var(--ink-soft); gap:10px; }
+.nj-spinner{ width:30px; height:30px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--forest); animation:nj-spin 0.8s linear infinite; }
+@keyframes nj-spin{ to{ transform:rotate(360deg); } }
+.nj-footer-note{ text-align:center; font-size:11px; color:var(--ink-soft); padding:14px 16px 0; }
+
+.nj-setup{ max-width:560px; margin:0 auto; padding:24px 20px; }
+.nj-setup .nj-card{ display:block; margin-top:16px; }
+.nj-setup code{ background:#FCFBF8; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:12.5px; }
+.nj-setup ol{ padding-left:20px; } .nj-setup li{ margin:8px 0; }
+.nj-setup pre{ background:#1B2A1D; color:#EAF2E9; padding:14px; border-radius:12px; overflow:auto; font-size:12px; }
+</style>
+
+<div id="nj-app">
+  <div class="nj-toast-wrap" id="njToasts"></div>
+  <div id="njBody"></div>
+</div>
+
+<script type="module">
+/* ============================================================================
+   INVENTARIO NATURA JACQUY  ·  Base de datos: Firebase Firestore
+   ============================================================================ */
+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc,
+  query, orderBy, limit, runTransaction
+} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence
+} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAzFwS3XbA6yvECUxD6xXwWGoCL5eIukto",
+  authDomain:        "inventario-natura-cea39.firebaseapp.com",
+  projectId:         "inventario-natura-cea39",
+  storageBucket:     "inventario-natura-cea39.firebasestorage.app",
+  messagingSenderId: "500380330865",
+  appId:             "1:500380330865:web:4a9929badb5c03131de4d0"
+};
+
+const CATS = ["Maquillaje","Skincare","Cabello","Perfumeria","Fragancia","Colonias","Aceites","Shampoo","Cuerpo","Unas","Accesorios","Otro"];
+const CLP = new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0});
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'"',"'":'''}[c]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+let state = {
+  loaded:false, error:null,
+  products:[], movements:[],
+  tab:'productos', search:'', filterCat:'',
+  modal:null, modalData:null,
+  online:true, lastSyncTs:null,
+  user:null, authReady:false, loggingIn:false
+};
+
+const body = document.getElementById('njBody');
+const toastsEl = document.getElementById('njToasts');
+
+function toast(msg, isErr){
+  const el = document.createElement('div');
+  el.className = 'nj-toast' + (isErr ? ' err' : '');
+  el.textContent = msg;
+  toastsEl.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 2600);
+}
+
+const SEED_PRODUCTS = [
+  {"id":"mrccucdcsp0736","name":"Body Splash Acerola E Hibisco 60ml","category":"Fragancia","price":7000,"qty":2,"minStock":1,"createdAt":1783531898400,"updatedAt":1783531978500},
+  {"id":"mrccz5u272tarn","name":"Aceite \u201cMam\u00e2e e beb\u00ea\u201d aceite de almendras 100ml","category":"Aceites","price":6000,"qty":1,"minStock":1,"createdAt":1783532123210,"updatedAt":1783532312661},
+  {"id":"mrcd1vq2uok04a","name":"Colonia Bebe \u201cMam\u00e3e e beb\u00ea\u201d 100ml","category":"Colonias","price":5000,"qty":3,"minStock":1,"createdAt":1783532250074,"updatedAt":1783532250074},
+  {"id":"mrcd500i5dibfz","name":"Shampoo \u201cMam\u00e3e e beb\u00ea\u201d 200 ml","category":"Shampoo","price":9990,"qty":2,"minStock":1,"createdAt":1783532395602,"updatedAt":1783532395602}
+];
+
+let db = null, auth = null, productsCol = null, movementsCol = null, listenersStarted = false;
+
+function configIncompleta(){
+  return Object.values(firebaseConfig).some(v => !v || String(v).startsWith('PEGA_AQUI'));
+}
+
+function initFirebase(){
+  const app = initializeApp(firebaseConfig);
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+  auth = getAuth(app);
+  productsCol = collection(db, 'products');
+  movementsCol = collection(db, 'movements');
+}
+
+function listen(){
+  onSnapshot(productsCol, (snap)=>{
+    state.products = snap.docs.map(d => Object.assign({ id:d.id }, d.data()));
+    state.loaded = true;
+    state.online = !snap.metadata.fromCache;
+    state.lastSyncTs = Date.now();
+    render();
+  }, (err)=>{
+    state.error = 'No se pudo conectar con la base de datos. Revisa las reglas de seguridad. Detalle: ' + err.code;
+    render();
+  });
+  onSnapshot(query(movementsCol, orderBy('ts','desc'), limit(300)), (snap)=>{
+    state.movements = snap.docs.map(d => Object.assign({ id:d.id }, d.data()));
+    if(state.loaded) render();
+  }, ()=>{});
+}
+
+function statusOf(p){
+  if(p.qty <= 0) return {label:'Agotado', cls:'danger'};
+  if(p.qty <= p.minStock) return {label:'Stock bajo', cls:'warn'};
+  return {label:'Disponible', cls:'ok'};
+}
+function dialColor(p){
+  const s = statusOf(p);
+  return s.cls === 'danger' ? 'var(--danger)' : s.cls === 'warn' ? 'var(--warn)' : 'var(--ok)';
+}
+function dialPct(p){
+  const target = Math.max(p.minStock * 3, 6);
+  return Math.max(4, Math.min(100, Math.round((p.qty / target) * 100)));
+}
+function timeAgo(ts){
+  const s = Math.round((Date.now()-ts)/1000);
+  if(s < 5) return 'ahora mismo';
+  if(s < 60) return `hace ${s} seg`;
+  const m = Math.round(s/60);
+  if(m < 60) return `hace ${m} min`;
+  const h = Math.round(m/60);
+  return `hace ${h} h`;
+}
+function totals(){
+  const list = state.products;
+  const units = list.reduce((a,p)=>a+Number(p.qty||0),0);
+  const value = list.reduce((a,p)=>a+Number(p.qty||0)*Number(p.price||0),0);
+  const agotados = list.filter(p=>p.qty<=0).length;
+  const bajos = list.filter(p=>p.qty>0 && p.qty<=p.minStock).length;
+  return {count:list.length, units, value, agotados, bajos};
+}
+function filteredProducts(){
+  const q = state.search.trim().toLowerCase();
+  return state.products
+    .filter(p => !state.filterCat || p.category === state.filterCat)
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
+    .sort((a,b)=> a.name.localeCompare(b.name,'es'));
+}
+
+function render(){
+  if(configIncompleta()){ renderSetup(); return; }
+  if(!state.authReady){
+    body.innerHTML = `<div class="nj-header"><div class="nj-eyebrow">Natura Jacquy</div><div class="nj-title">Inventario</div></div>
+      <div class="nj-loading"><div class="nj-spinner"></div><div>Conectando\u2026</div></div>`;
+    return;
+  }
+  if(!state.user){ renderLogin(); return; }
+  if(state.error){
+    body.innerHTML = `<div class="nj-loading"><div style="font-size:32px;">\u26A0\uFE0F</div><div>${esc(state.error)}</div>
+      <button class="nj-btn" id="njRetry" style="margin-top:8px;">Reintentar</button></div>`;
+    document.getElementById('njRetry').onclick = ()=>{ location.reload(); };
+    return;
+  }
+  if(!state.loaded){
+    body.innerHTML = `<div class="nj-header"><div class="nj-eyebrow">Natura Jacquy</div><div class="nj-title">Inventario</div></div>
+      <div class="nj-loading"><div class="nj-spinner"></div><div>Conectando con tu inventario\u2026</div></div>`;
+    return;
+  }
+  const t = totals();
+  const html = `
+    <div class="nj-header">
+      <button class="nj-logout" id="njLogout" title="Cerrar sesi\u00f3n">\u23FB Salir</button>
+      <div class="nj-eyebrow">Natura Jacquy \u00b7 Cosm\u00e9tica</div>
+      <div class="nj-title">Inventario</div>
+      <div class="nj-sub">Control de stock, entradas y salidas en tiempo real</div>
+      <div class="nj-user">\uD83D\uDC64 ${esc(state.user.email || 'Sesi\u00f3n iniciada')}</div>
+    </div>
+    <div class="nj-stats">
+      <div class="nj-stat"><b>${t.count}</b><span>Productos</span></div>
+      <div class="nj-stat"><b>${t.units}</b><span>Unidades</span></div>
+      <div class="nj-stat"><b>${CLP.format(t.value)}</b><span>Valor total</span></div>
+      <div class="nj-stat ${t.agotados>0?'danger':''}"><b>${t.agotados}</b><span>Agotados</span></div>
+      <div class="nj-stat ${t.bajos>0?'warn':''}"><b>${t.bajos}</b><span>Stock bajo</span></div>
+    </div>
+    <div class="nj-tabs">
+      <button class="nj-tab ${state.tab==='productos'?'active':''}" data-tab="productos">Productos</button>
+      <button class="nj-tab ${state.tab==='movimientos'?'active':''}" data-tab="movimientos">Historial</button>
+    </div>
+    ${state.tab==='productos' ? renderProductsTab() : renderMovementsTab()}
+    <div class="nj-footer-note">${state.online ? '\uD83D\uDFE2 Sincronizado en la nube \u00b7 visible para todo el equipo' : '\uD83D\uDFE0 Trabajando sin conexi\u00f3n \u2014 se sincronizar\u00e1 solo al recuperar internet'}${state.lastSyncTs ? ' \u00b7 actualizado ' + timeAgo(state.lastSyncTs) : ''}</div>
+    <button class="nj-fab" id="njAdd" title="Agregar producto" aria-label="Agregar producto">\uFF0B</button>
+    <button class="nj-backup" id="njBackup">\u2B07 Respaldo</button>
+    ${renderModal()}
+  `;
+  body.innerHTML = html;
+  bindEvents();
+}
+
+function renderSetup(){
+  body.innerHTML = `
+    <div class="nj-header"><div class="nj-eyebrow">Natura Jacquy</div><div class="nj-title">Inventario</div>
+      <div class="nj-sub">Falta un paso para activar el guardado en la nube</div></div>
+    <div class="nj-setup"><div class="nj-card">
+      <h3 style="font-size:18px;">\u2699\uFE0F Configuraci\u00f3n inicial</h3>
+      <p style="color:var(--ink-soft); font-size:14px; margin-top:6px;">Faltan las claves de Firebase en el c\u00f3digo.</p>
+    </div></div>`;
+}
+
+function renderLogin(){
+  body.innerHTML = `
+    <div class="nj-header">
+      <div class="nj-eyebrow">Natura Jacquy \u00b7 Cosm\u00e9tica</div>
+      <div class="nj-title">Inventario</div>
+      <div class="nj-sub">Ingresa con tu cuenta para ver el inventario del equipo</div>
+    </div>
+    <div class="nj-login">
+      <div class="nj-card" style="display:block;">
+        <h3 style="font-size:18px; margin-bottom:4px;">\uD83D\uDD10 Iniciar sesi\u00f3n</h3>
+        <p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">Usa el correo y la contrase\u00f1a que te compartieron.</p>
+        <form id="njLoginForm">
+          <div class="nj-field"><label>Correo</label>
+            <input type="email" name="email" required autocomplete="username" placeholder="tucorreo@gmail.com"></div>
+          <div class="nj-field"><label>Contrase\u00f1a</label>
+            <input type="password" name="password" required autocomplete="current-password" placeholder="Tu contrase\u00f1a"></div>
+          <div class="nj-modal-actions">
+            <button type="submit" class="nj-primary" id="njLoginBtn"${state.loggingIn?' disabled':''}>${state.loggingIn?'Ingresando\u2026':'Entrar'}</button>
+          </div>
+        </form>
+        <p class="nj-hint" style="margin-top:14px;">\u00bfNo tienes cuenta? P\u00eddele al administrador que te cree una en Firebase.</p>
+      </div>
+    </div>`;
+  const form = document.getElementById('njLoginForm');
+  if(form) form.onsubmit = onLogin;
+}
+
+async function onLogin(e){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = (fd.get('email')||'').toString().trim();
+  const password = (fd.get('password')||'').toString();
+  if(!email || !password){ toast('Escribe tu correo y contrase\u00f1a.', true); return; }
+  state.loggingIn = true; render();
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+  }catch(err){
+    state.loggingIn = false; render();
+    const code = err && err.code || '';
+    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found'))
+      toast('Correo o contrase\u00f1a incorrectos.', true);
+    else if(code.includes('invalid-email')) toast('El correo no es v\u00e1lido.', true);
+    else if(code.includes('too-many-requests')) toast('Demasiados intentos. Espera un momento.', true);
+    else if(code.includes('network')) toast('Sin conexi\u00f3n. Revisa tu internet.', true);
+    else toast('No se pudo iniciar sesi\u00f3n. (' + (code||'error') + ')', true);
+  }
+}
+
+async function doLogout(){
+  try{ await signOut(auth); }catch(e){}
+  location.reload();
+}
+
+function renderProductsTab(){
+  const list = filteredProducts();
+  const cats = [...new Set(state.products.map(p=>p.category).filter(Boolean))];
+  let html = `
+    <div class="nj-toolbar">
+      <div class="nj-search"><input type="text" id="njSearch" placeholder="Buscar producto o categor\u00eda\u2026" value="${esc(state.search)}"></div>
+      <select class="nj-select" id="njFilterCat">
+        <option value="">Todas las categor\u00edas</option>
+        ${cats.map(c=>`<option value="${esc(c)}" ${state.filterCat===c?'selected':''}>${esc(c)}</option>`).join('')}
+      </select>
+    </div>`;
+  if(list.length === 0){
+    html += state.products.length===0
+      ? `<div class="nj-empty"><h3>A\u00fan no hay productos</h3><p>Toca el bot\u00f3n "\uFF0B" para agregar el primero.</p>
+         <button class="nj-btn" id="njSeed" style="margin-top:14px; display:inline-flex;">\u2728 Cargar productos de ejemplo</button></div>`
+      : `<div class="nj-empty"><h3>Sin resultados</h3><p>Prueba con otra b\u00fasqueda o categor\u00eda.</p></div>`;
+    return html;
+  }
+  html += `<div class="nj-grid">`;
+  list.forEach(p=>{
+    const s = statusOf(p);
+    html += `
+      <div class="nj-card">
+        <div class="nj-dial" style="background:conic-gradient(${dialColor(p)} ${dialPct(p)}%, #EDE9DC 0)"><b>${p.qty}</b></div>
+        <div class="nj-card-body">
+          <div class="nj-card-top">
+            <div>
+              <div class="nj-card-name">${esc(p.name)}</div>
+              <div class="nj-cat">${esc(p.category||'Sin categor\u00eda')}</div>
+            </div>
+            <span class="nj-badge ${s.cls}">${s.label}</span>
+          </div>
+          <div class="nj-card-meta">
+            <div class="nj-qty">${p.qty} <small>en stock (m\u00edn. ${p.minStock})</small></div>
+            <div class="nj-price">${CLP.format(p.price||0)}</div>
+          </div>
+          <div class="nj-card-actions">
+            <button class="nj-btn in" data-action="mov" data-type="entrada" data-id="${p.id}">\u2191 Entrada</button>
+            <button class="nj-btn out" data-action="mov" data-type="salida" data-id="${p.id}">\u2193 Salida</button>
+            <button class="nj-btn ghost" data-action="edit" data-id="${p.id}">Editar</button>
+            <button class="nj-btn ghost" data-action="delete" data-id="${p.id}">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderMovementsTab(){
+  if(state.movements.length===0){
+    return `<div class="nj-empty"><h3>Sin movimientos a\u00fan</h3><p>Cada entrada o salida quedar\u00e1 registrada aqu\u00ed con fecha y hora.</p></div>`;
+  }
+  let html = `<div class="nj-mov-list">`;
+  state.movements.slice(0,120).forEach(m=>{
+    const d = new Date(m.ts);
+    const fecha = d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'}) + ' \u00b7 ' + d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    html += `
+      <div class="nj-mov">
+        <div class="nj-mov-icon ${m.type==='entrada'?'in':'out'}">${m.type==='entrada'?'\u2191':'\u2193'}</div>
+        <div class="nj-mov-body">
+          <div class="nj-mov-name">${esc(m.productName)}</div>
+          ${m.note ? `<div class="nj-mov-note">${esc(m.note)}</div>` : ''}
+        </div>
+        <div class="nj-mov-right">
+          <div class="nj-mov-qty ${m.type==='entrada'?'in':'out'}">${m.type==='entrada'?'+':'-'}${m.qty}</div>
+          <div class="nj-mov-time">${fecha}</div>
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderModal(){
+  if(!state.modal) return '';
+  if(state.modal==='product') return renderProductModal();
+  if(state.modal==='mov') return renderMovModal();
+  if(state.modal==='delete') return renderDeleteModal();
+  return '';
+}
+
+function renderProductModal(){
+  const editing = state.modalData && state.modalData.id;
+  const d = state.modalData || {name:'',category:'',price:'',qty:'',minStock:3};
+  return `
+  <div class="nj-overlay" id="njOverlay">
+    <div class="nj-modal">
+      <h2>${editing ? 'Editar producto' : 'Nuevo producto'}</h2>
+      <form id="njProductForm">
+        <div class="nj-field"><label>Nombre del producto</label>
+          <input type="text" name="name" required maxlength="80" value="${esc(d.name)}" placeholder="Ej: S\u00e9rum vitamina C 30ml"></div>
+        <div class="nj-field"><label>Categor\u00eda</label>
+          <input list="njCatList" name="category" value="${esc(d.category||'')}" placeholder="Ej: Skincare">
+          <datalist id="njCatList">${CATS.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </div>
+        <div class="nj-row2">
+          <div class="nj-field"><label>Precio (CLP)</label>
+            <input type="number" name="price" min="0" step="1" required value="${d.price===''?'':Number(d.price)}"></div>
+          <div class="nj-field"><label>${editing?'Cantidad actual':'Cantidad inicial'}</label>
+            <input type="number" name="qty" min="0" step="1" required value="${d.qty===''?'':Number(d.qty)}"></div>
+        </div>
+        <div class="nj-field"><label>Aviso de stock bajo cuando queden</label>
+          <input type="number" name="minStock" min="0" step="1" required value="${Number(d.minStock)}">
+          <div class="nj-hint">Con esta cantidad o menos, se marcar\u00e1 como "Stock bajo".</div>
+        </div>
+        <div class="nj-modal-actions">
+          <button type="button" class="nj-cancel" data-action="close">Cancelar</button>
+          <button type="submit" class="nj-primary">${editing?'Guardar cambios':'Agregar producto'}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function renderMovModal(){
+  const p = state.modalData.product;
+  const type = state.modalData.type;
+  return `
+  <div class="nj-overlay" id="njOverlay">
+    <div class="nj-modal">
+      <h2>${esc(p.name)}</h2>
+      <div class="nj-hint" style="margin-bottom:12px;">Stock actual: <b>${p.qty}</b> unidades</div>
+      <form id="njMovForm">
+        <div class="nj-field"><label>Tipo de movimiento</label>
+          <div class="nj-toggle2">
+            <button type="button" data-settype="entrada" class="${type==='entrada'?'active-in':''}">\u2191 Entrada</button>
+            <button type="button" data-settype="salida" class="${type==='salida'?'active-out':''}">\u2193 Salida</button>
+          </div>
+        </div>
+        <div class="nj-field"><label>Cantidad</label>
+          <input type="number" name="qty" min="1" step="1" required value="1"></div>
+        <div class="nj-field"><label>Nota (opcional)</label>
+          <input type="text" name="note" maxlength="120" placeholder="Ej: venta a cliente"></div>
+        <div class="nj-modal-actions">
+          <button type="button" class="nj-cancel" data-action="close">Cancelar</button>
+          <button type="submit" class="nj-primary">Registrar ${type}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function renderDeleteModal(){
+  const p = state.modalData;
+  return `
+  <div class="nj-overlay" id="njOverlay">
+    <div class="nj-modal">
+      <h2>Eliminar producto</h2>
+      <p style="color:var(--ink-soft); font-size:14px;">\u00bfEliminar <b>${esc(p.name)}</b>? Esta acci\u00f3n no se puede deshacer. El historial se conservar\u00e1.</p>
+      <div class="nj-modal-actions">
+        <button type="button" class="nj-cancel" data-action="close">Cancelar</button>
+        <button type="button" class="nj-danger" id="njConfirmDelete">Eliminar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindEvents(){
+  const addBtn = document.getElementById('njAdd');
+  if(addBtn) addBtn.onclick = ()=>{ state.modal='product'; state.modalData={name:'',category:'',price:'',qty:'',minStock:3}; render(); };
+  const backupBtn = document.getElementById('njBackup');
+  if(backupBtn) backupBtn.onclick = doBackup;
+  const logoutBtn = document.getElementById('njLogout');
+  if(logoutBtn) logoutBtn.onclick = doLogout;
+  const seedBtn = document.getElementById('njSeed');
+  if(seedBtn) seedBtn.onclick = loadSeed;
+
+  body.querySelectorAll('[data-tab]').forEach(b=> b.onclick = ()=>{ state.tab = b.dataset.tab; render(); });
+
+  const searchEl = document.getElementById('njSearch');
+  if(searchEl){ searchEl.oninput = ()=>{ state.search = searchEl.value; renderKeepFocus(searchEl); }; }
+  const filterEl = document.getElementById('njFilterCat');
+  if(filterEl) filterEl.onchange = ()=>{ state.filterCat = filterEl.value; render(); };
+
+  body.querySelectorAll('[data-action="edit"]').forEach(b=> b.onclick = ()=>{
+    const p = state.products.find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    state.modal='product'; state.modalData = Object.assign({}, p); render();
+  });
+  body.querySelectorAll('[data-action="delete"]').forEach(b=> b.onclick = ()=>{
+    const p = state.products.find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    state.modal='delete'; state.modalData = p; render();
+  });
+  body.querySelectorAll('[data-action="mov"]').forEach(b=> b.onclick = ()=>{
+    const p = state.products.find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    state.modal='mov'; state.modalData = {product:p, type:b.dataset.type}; render();
+  });
+
+  const overlay = document.getElementById('njOverlay');
+  if(overlay){
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+    const closeBtn = overlay.querySelector('[data-action="close"]');
+    if(closeBtn) closeBtn.onclick = closeModal;
+  }
+
+  const pForm = document.getElementById('njProductForm');
+  if(pForm) pForm.onsubmit = onSubmitProduct;
+
+  const mForm = document.getElementById('njMovForm');
+  if(mForm){
+    mForm.querySelectorAll('[data-settype]').forEach(btn=> btn.onclick = ()=>{ state.modalData.type = btn.dataset.settype; render(); });
+    mForm.onsubmit = onSubmitMovement;
+  }
+
+  const delBtn = document.getElementById('njConfirmDelete');
+  if(delBtn) delBtn.onclick = onConfirmDelete;
+}
+
+function renderKeepFocus(el){
+  const pos = el.selectionStart;
+  render();
+  const again = document.getElementById('njSearch');
+  if(again){ again.focus(); again.setSelectionRange(pos,pos); }
+}
+
+function closeModal(){ state.modal=null; state.modalData=null; render(); }
+
+async function onSubmitProduct(e){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = (fd.get('name')||'').toString().trim();
+  const category = (fd.get('category')||'').toString().trim();
+  const price = Number(fd.get('price'));
+  const qty = Number(fd.get('qty'));
+  const minStock = Number(fd.get('minStock'));
+  if(!name){ toast('El nombre es obligatorio.', true); return; }
+  if(!Number.isFinite(price) || price < 0){ toast('Ingresa un precio v\u00e1lido.', true); return; }
+  if(!Number.isFinite(qty) || qty < 0){ toast('Ingresa una cantidad v\u00e1lida.', true); return; }
+  if(!Number.isFinite(minStock) || minStock < 0){ toast('Ingresa un m\u00ednimo v\u00e1lido.', true); return; }
+  const editing = state.modalData && state.modalData.id;
+  try{
+    if(editing){
+      await updateDoc(doc(productsCol, state.modalData.id), { name, category, price, qty, minStock, updatedAt:Date.now() });
+    } else {
+      const id = uid();
+      await setDoc(doc(productsCol, id), { name, category, price, qty, minStock, createdAt:Date.now(), updatedAt:Date.now() });
+    }
+    toast(editing?'Producto actualizado.':'Producto agregado.');
+    closeModal();
+  }catch(err){ toast('No se pudo guardar. Revisa tu conexi\u00f3n. (' + (err.code||'error') + ')', true); }
+}
+
+async function onSubmitMovement(e){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const qty = Number(fd.get('qty'));
+  const note = (fd.get('note')||'').toString().trim();
+  const type = state.modalData.type;
+  const productId = state.modalData.product.id;
+  if(!Number.isFinite(qty) || qty <= 0){ toast('Ingresa una cantidad mayor a 0.', true); return; }
+  const prodRef = doc(productsCol, productId);
+  try{
+    const result = await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(prodRef);
+      if(!snap.exists()) throw { code:'not-found' };
+      const p = snap.data();
+      if(type==='salida' && qty > p.qty) throw { code:'sin-stock', disponible:p.qty };
+      const newQty = type==='entrada' ? p.qty + qty : p.qty - qty;
+      tx.update(prodRef, { qty:newQty, updatedAt:Date.now() });
+      const movRef = doc(movementsCol);
+      tx.set(movRef, { productId, productName:p.name, type, qty, note, ts:Date.now() });
+      return true;
+    });
+    if(result){ toast(type==='entrada'?'Entrada registrada.':'Salida registrada.'); closeModal(); }
+  }catch(err){
+    if(err && err.code==='sin-stock') toast(`Solo quedan ${err.disponible} unidades disponibles.`, true);
+    else if(err && err.code==='not-found') toast('El producto ya no existe.', true);
+    else toast('No se pudo registrar el movimiento. Revisa tu conexi\u00f3n.', true);
+  }
+}
+
+async function onConfirmDelete(){
+  const p = state.modalData;
+  try{
+    await deleteDoc(doc(productsCol, p.id));
+    toast('Producto eliminado.');
+    closeModal();
+  }catch(err){ toast('No se pudo eliminar. Revisa tu conexi\u00f3n.', true); }
+}
+
+async function loadSeed(){
+  try{
+    for(const p of SEED_PRODUCTS){
+      const { id, ...rest } = p;
+      await setDoc(doc(productsCol, id), rest);
+    }
+    toast('Productos de ejemplo cargados.');
+  }catch(err){ toast('No se pudieron cargar los ejemplos.', true); }
+}
+
+function doBackup(){
+  try{
+    const data = { exportedAt:new Date().toISOString(), products:state.products, movements:state.movements };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `respaldo-inventario-natura-jacquy-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Respaldo descargado.');
+  }catch(e){ toast('No se pudo generar el respaldo.', true); }
+}
+
+function start(){
+  if(configIncompleta()){ renderSetup(); return; }
+  try{
+    initFirebase();
+    render();
+    setPersistence(auth, browserLocalPersistence).catch(()=>{});
+    onAuthStateChanged(auth, (user)=>{
+      state.user = user;
+      state.authReady = true;
+      if(user){ if(!listenersStarted){ listen(); listenersStarted = true; } }
+      render();
+    });
+  }catch(err){
+    state.error = 'No se pudo iniciar Firebase. Revisa las claves. Detalle: ' + (err.message||err);
+    state.authReady = true;
+    render();
+  }
+}
+
+start();
+</script>
+</body>
+</html>
